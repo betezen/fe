@@ -555,7 +555,7 @@ export default function CountryPage() {
       const transaction = new Transaction().add(
         SystemProgram.transfer({
           fromPubkey: publicKey,
-          toPubkey: new PublicKey("BetizenFuturesProgramAddressHere"), // Ganti dengan address program Solana yang benar
+          toPubkey: new PublicKey("BetezenFuturesProgramAddressHere"), // change to the correct solana program address
           lamports:
             Number(position.size) *
             Number(position.leverage) *
