@@ -17,11 +17,11 @@ const nextConfig: NextConfig = {
     domains: ["i.pravatar.cc", "flagcdn.com"],
   },
   eslint: {
-    // Nonaktifkan pemeriksaan ESLint selama build
+    // Disable ESLint checks during build
     ignoreDuringBuilds: true,
   },
   typescript: {
-    // Nonaktifkan pemeriksaan tipe TypeScript selama build (opsional)
+    // Disable TypeScript type checking during build (optional)
     ignoreBuildErrors: true,
   },
 };

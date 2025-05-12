@@ -4,21 +4,14 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import {
-  useReadContract,
-  useWriteContract,
-  useWaitForTransactionReceipt,
-  useAccount,
-  useBalance,
-} from "wagmi";
-import { parseUnits } from "viem";
+  Transaction,
+  PublicKey,
+  SystemProgram,
+  LAMPORTS_PER_SOL,
+} from "@solana/web3.js";
 
-import {
-  CONTRACT_ADDRESSES,
-  MockUSDC_ABI,
-  USDC_ADDRESSES,
-  USDC_ABI,
-} from "@/lib/contracts/constants";
 import { usePositionsStore } from "@/components/trading/PositionsContext";
 import { useTradeHistoryStore } from "@/components/dashboard/tradeHistoryStore";
 
@@ -28,16 +21,16 @@ const countryData = {
     name: "USA",
     flagCode: "us",
     countryScore: 1839,
-    volume24h: "1,500,000", //PTT 1,500,000
-    indexPrice: "$1,300,000", //PTT 1,300,000
+    volume24h: "1,500,000", // Trading volume 1,500,000
+    indexPrice: "$1,300,000", // Index price 1,300,000
     sentiment: "Bullish",
     changePercent: 3.2,
     trend: "up",
     markPrice: "3.87M",
     fundingRate: "0.01%",
-    openInterest: "$7,500,000", //PTT 7,500,000
-    openTrades: "$120,800", //PTT 120,000
-    volumes: "$200,000", //PTT 200,000
+    openInterest: "$7,500,000",
+    openTrades: "$120,800",
+    volumes: "$200,000",
     fundingCooldown: "00:37:40",
     fundingPercent: "0.3000%",
     description:
@@ -474,6 +467,10 @@ export default function CountryPage() {
   const { addTrade, updateTrade } = useTradeHistoryStore();
   const [tradeId, setTradeId] = useState<string>("");
 
+  const wallet = useWallet();
+  const { publicKey, sendTransaction } = wallet;
+  const { connection } = useConnection();
+
   const [position, setPosition] = useState({
     size: "",
     leverage: "1",
@@ -483,99 +480,62 @@ export default function CountryPage() {
   const [showPosition, setShowPosition] = useState(false);
   const [closeStep, setCloseStep] = useState<1 | 2 | 3 | 4 | null>(null);
 
-  const { writeContract, data: hash, isPending } = useWriteContract();
-  const { isLoading: isConfirming } = useWaitForTransactionReceipt({ hash });
-
-  const { address } = useAccount();
-  const { data: walletBalance, refetch: refetchBalance } = useBalance({
-    address,
-    token: "0x2904921988f84BBD764D585e6f0249869FDEb25C",
-  });
-
   const { triggerRefresh } = usePositionsStore();
 
-  // Use the hook unconditionally
-  const { refetch: refetchPositionFromHook } = useReadContract({
-    address: CONTRACT_ADDRESSES[50002],
-    abi: MockUSDC_ABI,
-    functionName: "getPosition",
-    args: [] as const,
-    account: address, // Use account instead of enabled
-  });
+  const [walletBalance, setWalletBalance] = useState<number>(0);
+  const [isPending, setIsPending] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
 
-  // Create a wrapper function that conditionally calls the hook's refetch
-  const refetchPosition = () => {
-    if (address) {
-      return refetchPositionFromHook();
+  const fetchBalance = async () => {
+    if (publicKey) {
+      try {
+        const balance = await connection.getBalance(publicKey);
+        setWalletBalance(balance / LAMPORTS_PER_SOL);
+      } catch (error) {
+        console.error("Failed to fetch balance:", error);
+      }
     }
-    return Promise.resolve();
   };
 
   useEffect(() => {
-    if (hash && !isConfirming) {
-      const savedSize = position.size; // Save the size before resetting
-      setPosition({
-        size: savedSize, // Keep the size
-        leverage: "1",
-        isLong: true,
-      });
-      setShowPosition(true);
-
-      document
-        .querySelector("#positions-panel")
-        ?.scrollIntoView({ behavior: "smooth" });
-
-      const timer = setTimeout(() => {
-        refetchBalance().catch((err) =>
-          console.error("Failed to refresh balance:", err)
-        );
-        triggerRefresh();
-      }, 3500);
-
-      return () => clearTimeout(timer);
-    }
-  }, [hash, isConfirming, refetchBalance, triggerRefresh, position.size]);
-
-  useEffect(() => {
+    fetchBalance();
     const interval = setInterval(() => {
-      if (address) {
-        refetchBalance();
+      if (publicKey) {
+        fetchBalance();
       }
-    }, 10000); // Refresh every 10 seconds
-
+    }, 10000);
     return () => clearInterval(interval);
-  }, [address, refetchBalance]);
+  }, [publicKey, connection]);
+
+  const refetchPosition = async () => {
+    if (publicKey) {
+      try {
+        // Implementasi sesuai program Solana Anda
+        console.log("Fetching position data for:", publicKey.toString());
+        // Custom implementation...
+
+        triggerRefresh();
+      } catch (error: any) {
+        console.error("Failed to refresh position:", error);
+      }
+    }
+  };
 
   const handlePlaceTrade = async () => {
     try {
-      if (!id || typeof id !== "string") {
-        throw new Error("Country ID is required");
-      }
-
-      if (!address) {
+      if (!publicKey) {
         throw new Error("Wallet not connected");
       }
 
-      const decimals = 6;
+      setIsPending(true);
 
-      // const sizeInWei = parseEther(
-      //   (Number(position.size) * Number(position.leverage)).toString(),
-      //   decimals
-      // );
-
-      const sizeInWei = parseUnits(
-        (Number(position.size) * Number(position.leverage)).toString(),
-        decimals
-      );
-      console.log("Approving", sizeInWei, "tokens");
-
-      // Generate unique trade ID
+      // Buat trade ID
       const newTradeId = `trade-${Date.now()}-${Math.random()
         .toString(36)
-        .substr(2, 9)}`;
+        .substring(2, 9)}`;
       setTradeId(newTradeId);
 
-      // Add trade to history immediately when placing
+      // Tambahkan ke history
       addTrade({
         id: newTradeId,
         country: country.name,
@@ -584,59 +544,76 @@ export default function CountryPage() {
         entryPrice: country.markPrice,
         marketPrice: country.markPrice,
         pnl: {
-          amount: "$0.00",
+          amount: "0.00",
           percentage: "0.0",
           isProfit: true,
         },
         status: "Open",
       });
 
-      // 1. Approve contract to use token
-      const approvalTx = await writeContract({
-        address: USDC_ADDRESSES[50002],
-        abi: USDC_ABI,
-        functionName: "approve",
-        args: [CONTRACT_ADDRESSES[50002], sizeInWei],
-      });
-      console.log("Approval TX:", approvalTx);
-
-      // Wait for approval confirmation
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      // 2. Open Position
-      const tradeTx = await writeContract({
-        address: CONTRACT_ADDRESSES[50002],
-        abi: MockUSDC_ABI,
-        functionName: "openPosition",
-        args: [
-          id,
-          position.isLong ? 0 : 1,
-          Number(position.leverage),
-          sizeInWei,
-        ],
-        value: sizeInWei,
-      });
-      console.log("Trade TX:", tradeTx);
-
-      // Refresh position data explicitly
-      refetchPosition().catch((err) =>
-        console.error("Failed to refresh position:", err)
+      // Buat transaksi Solana
+      const transaction = new Transaction().add(
+        SystemProgram.transfer({
+          fromPubkey: publicKey,
+          toPubkey: new PublicKey("BetizenFuturesProgramAddressHere"), // Ganti dengan address program Solana yang benar
+          lamports:
+            Number(position.size) *
+            Number(position.leverage) *
+            LAMPORTS_PER_SOL,
+        })
       );
-      refetchBalance().catch((err: Error) =>
-        console.error("Failed to refresh balance:", err)
+
+      // Kirim transaksi
+      const signature = await sendTransaction(transaction, connection);
+
+      // Tunggu konfirmasi
+      const confirmation = await connection.confirmTransaction(
+        signature,
+        "confirmed"
       );
-      triggerRefresh();
-    } catch (error) {
-      console.error("Error placing trade:", error);
-      if (error instanceof Error) {
-        alert("Failed to trade: " + error.message);
-      } else {
-        alert("Failed to trade: " + JSON.stringify(error));
+
+      if (confirmation.value.err) {
+        throw new Error(
+          "Transaction failed: " + confirmation.value.err.toString()
+        );
       }
+
+      console.log("Transaction successful:", signature);
+
+      // Update UI
+      setShowPosition(true);
+      setIsPending(false);
+      fetchBalance(); // Update saldo
+    } catch (error: any) {
+      setIsPending(false);
+      console.error("Error placing trade:", error);
+      alert("Failed to trade: " + error.message);
     }
   };
 
-  const isProcessing = isPending || isConfirming;
+  useEffect(() => {
+    if (publicKey) {
+      refetchPosition().catch((err: any) =>
+        console.error("Failed to refresh position:", err)
+      );
+      triggerRefresh();
+    }
+  }, [publicKey, refetchPosition, triggerRefresh]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (publicKey) {
+        refetchPosition().catch((err: any) =>
+          console.error("Failed to refresh position:", err)
+        );
+        triggerRefresh();
+      }
+    }, 10000); // Refresh every 10 seconds
+
+    return () => clearInterval(interval);
+  }, [publicKey, refetchPosition, triggerRefresh]);
+
+  const isProcessing = false;
 
   const handleCloseStepContinue = () => {
     if (closeStep === 1) {
@@ -1080,9 +1057,7 @@ export default function CountryPage() {
                           </span>
                           <span className="text-white text-base font-medium font-['Inter'] leading-snug">
                             {walletBalance
-                              ? `${Number(walletBalance.formatted).toFixed(
-                                  4
-                                )} ${walletBalance.symbol}`
+                              ? `${walletBalance.toFixed(4)} SOL`
                               : "Loading..."}
                           </span>
                         </div>
@@ -1106,7 +1081,7 @@ export default function CountryPage() {
                       } text-xl font-bold font-['Inter'] leading-tight`}
                     />
                     <div className="text-[#d6d6d6] text-xl font-bold font-['Inter'] leading-tight">
-                      USDC
+                      SOL
                     </div>
                   </div>
                   <div className="self-stretch py-6 relative inline-flex justify-start items-center gap-3">

@@ -1,7 +1,3 @@
-// Remove the unused imports
-// import { type ClassValue, clsx } from "clsx";
-// import { twMerge } from "tailwind-merge";
-
 export function formatCurrency(
   amount: number,
   decimals: number = 2,
