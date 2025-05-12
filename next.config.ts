@@ -24,6 +24,9 @@ const nextConfig: NextConfig = {
     // Disable TypeScript type checking during build (optional)
     ignoreBuildErrors: true,
   },
+  experimental: {
+    optimizeCss: false, // Nonaktifkan optimisasi CSS yang menggunakan lightningcss
+  },
 };
 
 export default nextConfig;
