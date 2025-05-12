@@ -2,227 +2,254 @@
 #![allow(unexpected_cfgs)]
 
 use anchor_lang::prelude::*;
-use anchor_lang::system_program;
-declare_id!("coUnmi3oBUtwtd9fjeAvSsJssXh5A5xyPbhpewyzRVF"); // localnet
+
+declare_id!("coUnmi3oBUtwtd9fjeAvSsJssXh5A5xyPbhpewyzRVF");
 
 #[program]
 pub mod escrow {
     use super::*;
 
-    pub fn initialize(ctx: Context<Initialize>, order_details: String, amount: u64) -> Result<()> {
+    pub fn open_position(
+        ctx: Context<OpenPosition>,
+        country_id: String,
+        direction: PositionDirection,
+        leverage: u8,
+        size: u64,
+    ) -> Result<()> {
+        // Validate inputs
+        require!(size > 0, EscrowError::ZeroAmount);
+        require!(leverage >= 1 && leverage <= 5, EscrowError::InvalidLeverage);
+
+        let escrow_account = &mut ctx.accounts.escrow_account;
+        let buyer = &ctx.accounts.buyer;
+
+        // Calculate fees
+        let fee = (size * TRANSACTION_FEE) / 10000;
+        let position_size = size.checked_sub(fee).ok_or(EscrowError::InternalError)?;
+
+        // Initialize position
+        escrow_account.position_id = 0; // You would implement a counter
+        escrow_account.country_id = country_id;
+        escrow_account.trader = *buyer.key;
+        escrow_account.direction = direction.clone();
+        escrow_account.size = position_size;
+        escrow_account.leverage = leverage;
+        escrow_account.entry_price = 100; // Mock price
+        escrow_account.open_time = Clock::get()?.unix_timestamp;
+        escrow_account.take_profit = 0;
+        escrow_account.stop_loss = 0;
+        escrow_account.is_open = true;
+        escrow_account.liquidation_price =
+            calculate_liquidation(escrow_account.entry_price, leverage, direction)?;
+
         Ok(())
     }
 
-    pub fn confirm_order(ctx: Context<ConfirmOrder>) -> Result<()> {
-        ctx.accounts.escrow_account.status = EscrowStatus::Confirmed;
+    pub fn close_position(ctx: Context<ClosePosition>) -> Result<()> {
+        let escrow_account = &mut ctx.accounts.escrow_account;
+        let trader = &ctx.accounts.trader;
+
+        require!(escrow_account.is_open, EscrowError::PositionClosed);
+        require!(
+            escrow_account.trader == *trader.key,
+            EscrowError::Unauthorized
+        );
+
+        let current_price = 120; // Mock price - would come from oracle
+
+        let pnl = calculate_pnl(
+            escrow_account.direction.clone(),
+            escrow_account.entry_price,
+            current_price,
+            escrow_account.size,
+            escrow_account.leverage,
+        )?;
+
+        // Transfer funds back to trader
+        let amount = if pnl >= 0 {
+            escrow_account
+                .size
+                .checked_add(pnl as u64)
+                .ok_or(EscrowError::InternalError)?
+        } else {
+            escrow_account
+                .size
+                .checked_sub((-pnl) as u64)
+                .ok_or(EscrowError::InternalError)?
+        };
+
+        escrow_account.is_open = false;
+
+        // Transfer lamports implementation would go here
+        transfer_lamports(
+            &ctx.accounts.escrow_account.to_account_info(),
+            &trader.to_account_info(),
+            amount,
+        )?;
+
         Ok(())
     }
 
-    pub fn refund_order(ctx: Context<RefundOrder>) -> Result<()> {
-        Ok(())
-    }
+    pub fn set_tpsl(ctx: Context<SetTPSL>, take_profit: u64, stop_loss: u64) -> Result<()> {
+        let escrow_account = &mut ctx.accounts.escrow_account;
 
-    pub fn fail_order(ctx: Context<FailOrder>) -> Result<()> {
-        Ok(())
-    }
+        require!(escrow_account.is_open, EscrowError::PositionClosed);
 
-    pub fn withdraw_funds(ctx: Context<WithdrawFunds>) -> Result<()> {
-        Ok(())
-    }
+        escrow_account.take_profit = take_profit;
+        escrow_account.stop_loss = stop_loss;
 
-    pub fn close_escrow(ctx: Context<CloseEscrow>) -> Result<()> {
         Ok(())
     }
 }
 
-// Helper to transfer lamports from a PDA
-fn transfer_lamports(from: &AccountInfo, to: &AccountInfo, amount: u64) -> Result<()> {
-    Ok(())
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, PartialEq, Eq, InitSpace)]
+pub enum PositionDirection {
+    Long,
+    Short,
 }
 
 #[account]
 #[derive(InitSpace)]
 pub struct EscrowAccount {
-    pub buyer: Pubkey,
-    pub seller: Pubkey,
+    pub position_id: u64,
     #[max_len(32)]
-    pub order_details: String,
-    pub amount: u64,
-    pub status: EscrowStatus,
-    pub bump: u8,
+    pub country_id: String,
+    pub trader: Pubkey,
+    pub direction: PositionDirection,
+    pub size: u64,
+    pub leverage: u8,
+    pub entry_price: u64,
+    pub open_time: i64,
+    pub take_profit: u64,
+    pub stop_loss: u64,
+    pub is_open: bool,
+    pub liquidation_price: u64,
+}
+
+const TRANSACTION_FEE: u64 = 30;
+const MAINTENANCE_MARGIN: u64 = 10;
+
+fn calculate_liquidation(
+    entry_price: u64,
+    leverage: u8,
+    direction: PositionDirection,
+) -> Result<u64> {
+    let leverage = leverage as u64;
+
+    let liquidation_price = match direction {
+        PositionDirection::Long => entry_price
+            .checked_mul(leverage)
+            .and_then(|v| v.checked_div(leverage + 1))
+            .and_then(|v| v.checked_sub(leverage.checked_mul(MAINTENANCE_MARGIN)?)),
+        PositionDirection::Short => entry_price
+            .checked_mul(leverage)
+            .and_then(|v| v.checked_div(leverage - 1))
+            .and_then(|v| v.checked_sub(leverage.checked_mul(MAINTENANCE_MARGIN)?)),
+    }
+    .ok_or(EscrowError::InternalError)?;
+
+    Ok(liquidation_price)
+}
+
+fn calculate_pnl(
+    direction: PositionDirection,
+    entry_price: u64,
+    current_price: u64,
+    size: u64,
+    leverage: u8,
+) -> Result<i64> {
+    let leverage = leverage as u64;
+
+    let pnl = match direction {
+        PositionDirection::Long => {
+            if current_price > entry_price {
+                (current_price - entry_price)
+                    .checked_mul(size)
+                    .and_then(|v| v.checked_mul(leverage))
+                    .and_then(|v| v.checked_div(entry_price))
+                    .map(|v| v as i64)
+            } else {
+                (entry_price - current_price)
+                    .checked_mul(size)
+                    .and_then(|v| v.checked_mul(leverage))
+                    .and_then(|v| v.checked_div(entry_price))
+                    .map(|v| -(v as i64))
+            }
+        }
+        PositionDirection::Short => {
+            if current_price > entry_price {
+                (current_price - entry_price)
+                    .checked_mul(size)
+                    .and_then(|v| v.checked_mul(leverage))
+                    .and_then(|v| v.checked_div(entry_price))
+                    .map(|v| -(v as i64))
+            } else {
+                (entry_price - current_price)
+                    .checked_mul(size)
+                    .and_then(|v| v.checked_mul(leverage))
+                    .and_then(|v| v.checked_div(entry_price))
+                    .map(|v| v as i64)
+            }
+        }
+    }
+    .ok_or(EscrowError::InternalError)?;
+
+    Ok(pnl)
 }
 
 #[derive(Accounts)]
-#[instruction(order_details: String, amount: u64)]
-pub struct Initialize<'info> {
+#[instruction(country_id: String, direction: PositionDirection, leverage: u8, size: u64)]
+pub struct OpenPosition<'info> {
     #[account(
-        init_if_needed,
+        init,
         payer = buyer,
         space = EscrowAccount::INIT_SPACE,
-        seeds = [b"escrow", buyer.key().as_ref(), seller.key().as_ref(), order_details.as_bytes()],
+        seeds = [b"escrow", buyer.key().as_ref()],
         bump
     )]
     pub escrow_account: Account<'info, EscrowAccount>,
-
     #[account(mut)]
     pub buyer: Signer<'info>,
-
-    /// CHECK: This is the seller's account, only need address
-    #[account()]
-    pub seller: AccountInfo<'info>,
-
     pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
-pub struct RefundOrder<'info> {
-    #[account(
-        mut, // Escrow account state and lamports will change
-        seeds = [b"escrow", escrow_account.buyer.as_ref(), escrow_account.seller.as_ref(), escrow_account.order_details.as_bytes()],
-        bump = escrow_account.bump,
-        // Constraint for buyer already exists if needed, but signer implies authority
-    )]
-    pub escrow_account: Account<'info, EscrowAccount>,
-
-    #[account(
-        mut,
-        constraint = buyer.key() == escrow_account.buyer
-    )]
-    pub buyer: Signer<'info>,
-}
-
-#[derive(Accounts)]
-pub struct ConfirmOrder<'info> {
-    #[account(
-        mut,
-        has_one = seller @ EscrowError::Unauthorized
-    )]
-    pub escrow_account: Account<'info, EscrowAccount>,
-
+pub struct ClosePosition<'info> {
     #[account(mut)]
-    pub seller: Signer<'info>,
-}
-
-#[derive(Accounts)]
-pub struct FailOrder<'info> {
-    #[account(
-        mut,
-        seeds = [b"escrow", escrow_account.buyer.as_ref(), escrow_account.seller.as_ref(), escrow_account.order_details.as_bytes()],
-        bump = escrow_account.bump
-    )]
     pub escrow_account: Account<'info, EscrowAccount>,
-
-    /// CHECK: Destination for lamports refund
-    #[account(
-        mut,
-        constraint = buyer.key() == escrow_account.buyer @ EscrowError::OnlyBuyerAllowed
-    )]
-    pub buyer: AccountInfo<'info>,
-
-    #[account(
-        constraint = authority.key() == escrow_account.buyer || authority.key() == escrow_account.seller @ EscrowError::Unauthorized
-    )]
-    pub authority: Signer<'info>,
-}
-
-#[derive(Accounts)]
-pub struct WithdrawFunds<'info> {
-    #[account(
-        mut,
-        has_one = seller @ EscrowError::Unauthorized, // Ensures only the correct seller can call
-        seeds = [b"escrow", escrow_account.buyer.as_ref(), escrow_account.seller.as_ref(), escrow_account.order_details.as_bytes()],
-        bump = escrow_account.bump
-    )]
-    pub escrow_account: Account<'info, EscrowAccount>,
-
-    #[account(mut)] // Seller receives the funds
-    pub seller: Signer<'info>,
-}
-
-#[derive(Accounts)]
-pub struct CloseEscrow<'info> {
-    #[account(
-        mut,
-        close = receiver, // Closes escrow_account and sends its lamports to receiver
-        seeds = [b"escrow", escrow_account.buyer.as_ref(), escrow_account.seller.as_ref(), escrow_account.order_details.as_bytes()],
-        bump = escrow_account.bump
-    )]
-    pub escrow_account: Account<'info, EscrowAccount>,
-
-    /// Can be buyer or a refund receiver
     #[account(mut)]
-    pub receiver: Signer<'info>,
+    pub trader: Signer<'info>,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, PartialEq, Eq, InitSpace)]
-pub enum EscrowStatus {
-    Initialized,
-    Confirmed,
-    Completed,
-    Refunded,
-    Failed,
+#[derive(Accounts)]
+pub struct SetTPSL<'info> {
+    #[account(mut)]
+    pub escrow_account: Account<'info, EscrowAccount>,
+    pub trader: Signer<'info>,
+}
+
+fn transfer_lamports(from: &AccountInfo, to: &AccountInfo, amount: u64) -> Result<()> {
+    **from.try_borrow_mut_lamports()? = from
+        .lamports()
+        .checked_sub(amount)
+        .ok_or(EscrowError::InternalError)?;
+    **to.try_borrow_mut_lamports()? = to
+        .lamports()
+        .checked_add(amount)
+        .ok_or(EscrowError::InternalError)?;
+    Ok(())
 }
 
 #[error_code]
 pub enum EscrowError {
-    // Input validation errors
-    #[msg("Order details exceed maximum length of 32 characters")]
-    OrderDetailsTooLong,
-
-    #[msg("Escrow amount must be greater than zero")]
+    #[msg("Amount must be greater than zero")]
     ZeroAmount,
-
-    // Authorization errors
-    #[msg("Only the buyer can perform this operation")]
-    OnlyBuyerAllowed,
-
-    #[msg("Only the seller can perform this operation")]
-    OnlySellerAllowed,
-
-    #[msg("Unauthorized access: signer is neither buyer nor seller")]
+    #[msg("Leverage must be between 1 and 5")]
+    InvalidLeverage,
+    #[msg("Position is already closed")]
+    PositionClosed,
+    #[msg("Unauthorized access")]
     Unauthorized,
-
-    // State transition errors
-    #[msg("Cannot confirm escrow that is not in Initialized state")]
-    InvalidStatusForConfirmation,
-
-    #[msg("Cannot refund escrow that is not in Initialized state")]
-    InvalidStatusForRefund,
-
-    #[msg("Cannot mark as failed if escrow is not in Initialized state")]
-    InvalidStatusForFailure,
-
-    #[msg("Cannot withdraw funds if escrow is not in Confirmed state")]
-    InvalidStatusForWithdrawal,
-
-    #[msg("Cannot close escrow that is not in Completed, Refunded, or Failed state")]
-    InvalidStatusForClose,
-
-    // Fund-related errors
-    #[msg("Insufficient funds in escrow account")]
-    InsufficientFunds,
-
-    #[msg("Funds have already been withdrawn")]
-    AlreadyWithdrawn,
-
-    #[msg("Fund transfer failed")]
-    TransferFailed,
-
-    // System errors
-    #[msg("Failed to calculate PDA for escrow account")]
-    PdaDerivationError,
-
-    #[msg("Failed to calculate PDA for vault account")]
-    VaultDerivationError,
-
-    // Operational errors
-    #[msg("Escrow has expired and can no longer be confirmed")]
-    EscrowExpired,
-
-    #[msg("Escrow is locked due to an ongoing dispute")]
-    EscrowLocked,
-
-    // Generic fallback error
-    #[msg("An unexpected error occurred in the escrow program")]
+    #[msg("Internal calculation error")]
     InternalError,
 }

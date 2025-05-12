@@ -49,3 +49,6 @@ info: The currently active `rustc` version is `rustc 1.86.0 (05f9846f8 2025-03-3
 
 rustc --version 
 rustc 1.86.0 (05f9846f8 2025-03-31)
+
+how to setup anchor rust
+add Anchor.toml and Cargo.toml
