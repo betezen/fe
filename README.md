@@ -1,36 +1,54 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-## Getting Started
+# 🧠 Prepecual Prediction Market
 
-First, run the development server:
+Platform prediction market berbasis Solana dan Anchor, dengan frontend berbasis Next.js.
+
+---
+
+## 🚀 Getting Started
+
+### 📋 Prasyarat
+
+Pastikan Anda sudah menginstal versi berikut:
+
+- **Node.js** `v18.18.0` atau lebih tinggi  
+- **Rust** `v1.77.2` atau lebih tinggi  
+- **Anchor CLI** `v0.31.1` atau lebih tinggi  
+- **Solana CLI** `v1.18.17` atau lebih tinggi  
+
+---
+
+### 📦 Instalasi
+
+1. **Clone repository:**
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/betezen/fe.git
+cd fe
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. **Install package**
+```bash
+npm install
+```
+3. **Running aplikasi**
+```bash
+npm run dev
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+avm --version            
+avm 0.31.1
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+anchor --version         
+anchor-cli 0.31.1
 
-## Learn More
+rustup --version     
+rustup 1.28.2 (e4f3ad6f8 2025-04-28)
+info: This is the version for the rustup toolchain manager, not the rustc compiler.
+info: The currently active `rustc` version is `rustc 1.86.0 (05f9846f8 2025-03-31)`
 
-To learn more about Next.js, take a look at the following resources:
+rustc --version 
+rustc 1.86.0 (05f9846f8 2025-03-31)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+how to setup anchor rust
+add Anchor.toml and Cargo.toml
