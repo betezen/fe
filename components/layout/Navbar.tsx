@@ -1,17 +1,12 @@
 "use client";
 
-import type React from "react";
 import Link from "next/link";
-// import { usePathname } from "next/navigation";
 import WalletMultiButton from "@/components/ui/connect-wallet-button";
-// import { useAccount } from "wagmi";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { useState, useEffect } from "react";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 
 export default function Navbar() {
-  // const pathname = usePathname();
-  // const { isConnected } = useAccount();
   const wallet = useWallet();
   const { publicKey } = wallet;
   const { connection } = useConnection();
@@ -47,20 +42,13 @@ export default function Navbar() {
             href="/"
             className="text-xl font-medium text-white flex items-center"
           >
-            <Link
-  href="/"
-  className="text-xl font-medium text-white flex items-center"
->
-  <img
-    src="/logo.jpg"
-    alt="Logo"
-    width="32"
-    height="32"
-    className="mr-2 rounded"
-  />
-  betezen.fun
-</Link>
-
+            <img
+              src="/logo.jpg"
+              alt="Logo"
+              width="32"
+              height="32"
+              className="mr-2 rounded"
+            />
             betezen.fun
           </Link>
         </div>
