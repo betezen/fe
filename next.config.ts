@@ -24,6 +24,18 @@ const nextConfig: NextConfig = {
     // Disable TypeScript type checking during build (optional)
     ignoreBuildErrors: true,
   },
+  experimental: {
+    optimizeCss: false,
+  },
+  transpilePackages: ["lightningcss", "@tailwindcss/postcss"],
+  webpack: (config) => {
+    // Avoid lightningcss native module issues
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      lightningcss: false,
+    };
+    return config;
+  },
 };
 
 export default nextConfig;
