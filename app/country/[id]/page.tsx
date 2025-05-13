@@ -551,39 +551,19 @@ export default function CountryPage() {
         status: "Open",
       });
 
-      // Buat transaksi Solana
-      const transaction = new Transaction().add(
-        SystemProgram.transfer({
-          fromPubkey: publicKey,
-          toPubkey: new PublicKey("BetezenFuturesProgramAddressHere"), // change to the correct solana program address
-          lamports:
-            Number(position.size) *
-            Number(position.leverage) *
-            LAMPORTS_PER_SOL,
-        })
-      );
+      // Simulasi delay untuk "processing"
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      // Kirim transaksi
-      const signature = await sendTransaction(transaction, connection);
-
-      // Tunggu konfirmasi
-      const confirmation = await connection.confirmTransaction(
-        signature,
-        "confirmed"
-      );
-
-      if (confirmation.value.err) {
-        throw new Error(
-          "Transaction failed: " + confirmation.value.err.toString()
-        );
-      }
-
-      console.log("Transaction successful:", signature);
+      // Mock transaksi berhasil - tidak perlu transaksi Solana sungguhan
+      console.log("Mock transaction successful!");
 
       // Update UI
       setShowPosition(true);
       setIsPending(false);
-      fetchBalance(); // Update saldo
+
+      // Simulasi pengurangan saldo wallet (opsional)
+      const tradeAmount = Number(position.size) * Number(position.leverage);
+      setWalletBalance((prev) => Math.max(0, prev - tradeAmount));
     } catch (error: any) {
       setIsPending(false);
       console.error("Error placing trade:", error);
@@ -1580,7 +1560,7 @@ export default function CountryPage() {
                       </div>
                       <div className="text-center">
                         <div className="text-white text-3xl font-bold mb-2">
-                          $1,234.56
+                          $1,928.47
                         </div>
                         <div className="text-gray-400">Previous: $1,000.00</div>
                       </div>
