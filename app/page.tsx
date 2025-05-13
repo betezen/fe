@@ -34,7 +34,6 @@ export default function RootPage() {
       {isMobile ? (
         <div className="mobile-content">
           {/* Mobile version content */}
-          <h1 className="text-xl font-bold">Mobile Version</h1>
           {/* Other mobile components */}
         </div>
       ) : (
