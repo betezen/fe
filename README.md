@@ -1,7 +1,7 @@
 
 # 🧠 Prepecual Prediction Market
 
-Platform prediction market berbasis Solana dan Anchor, dengan frontend berbasis Next.js.
+Platform prediction market berbasis Solana dan Anchor, dengan frontend berbasis Next.js
 
 ---
 
