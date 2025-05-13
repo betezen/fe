@@ -9,6 +9,25 @@ declare_id!("coUnmi3oBUtwtd9fjeAvSsJssXh5A5xyPbhpewyzRVF");
 pub mod escrow {
     use super::*;
 
+    pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
+        let state = &mut ctx.accounts.program_state;
+        let authority = &ctx.accounts.authority;
+
+        // Initialize program state
+        state.authority = authority.key();
+        state.total_positions = 0;
+        state.is_initialized = true;
+        state.creation_time = Clock::get()?.unix_timestamp;
+
+        // Emit event for initialization
+        emit!(ProgramInitialized {
+            authority: authority.key(),
+            timestamp: state.creation_time,
+        });
+
+        Ok(())
+    }
+
     pub fn open_position(
         ctx: Context<OpenPosition>,
         country_id: String,
@@ -100,6 +119,35 @@ pub mod escrow {
 
         Ok(())
     }
+}
+
+#[derive(Accounts)]
+pub struct Initialize<'info> {
+    #[account(mut)]
+    pub authority: Signer<'info>,
+    #[account(
+        init,
+        payer = authority,
+        space = 8 + 32 + 8 + 1 + 8, // Adjust space according to ProgramState struct
+        seeds = [b"program_state"],
+        bump
+    )]
+    pub program_state: Account<'info, ProgramState>,
+    pub system_program: Program<'info, System>,
+}
+
+#[event]
+pub struct ProgramInitialized {
+    pub authority: Pubkey,
+    pub timestamp: i64,
+}
+
+#[account]
+pub struct ProgramState {
+    pub authority: Pubkey,
+    pub total_positions: u64,
+    pub is_initialized: bool,
+    pub creation_time: i64,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, PartialEq, Eq, InitSpace)]
