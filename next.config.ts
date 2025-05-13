@@ -25,7 +25,16 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   experimental: {
-    optimizeCss: false, // Nonaktifkan optimisasi CSS yang menggunakan lightningcss
+    optimizeCss: false,
+  },
+  transpilePackages: ["lightningcss", "@tailwindcss/postcss"],
+  webpack: (config) => {
+    // Avoid lightningcss native module issues
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      lightningcss: false,
+    };
+    return config;
   },
 };
 
