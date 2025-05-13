@@ -76,15 +76,16 @@
     "@coral-xyz/anchor": "^0.31.1",
     "@eslint/eslintrc": "^3",
     "@solana/web3.js": "^1.98.2",
-    "@tailwindcss/postcss": "^4",
+    "@tailwindcss/postcss": "^4.1.6",
     "@types/chai": "^5.2.2",
     "@types/mocha": "^10.0.10",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "autoprefixer": "^10.4.21",
     "eslint": "^9",
     "eslint-config-next": "15.3.1",
-    "tailwindcss": "^4",
+    "tailwindcss": "^4.1.6",
     "ts-mocha": "^11.1.0",
     "typescript": "^5"
   }
