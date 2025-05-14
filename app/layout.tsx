@@ -8,7 +8,7 @@ import { Toaster } from "@/components/ui/toast-helper";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "Be The Nation - GDP Prediction Market",
+  title: "Betezen",
   description: "Trade on the economic performance of countries",
 };
 

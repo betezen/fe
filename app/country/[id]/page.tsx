@@ -759,10 +759,10 @@ export default function CountryPage() {
             </div>
 
             {/* Stats Section */}
-            <div className="flex flex-1 justify-end gap-8">
+            <div className="flex flex-col sm:flex-row flex-1 justify-end gap-3 sm:gap-8 w-full">
               {/* Open Trades */}
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-[#ffe5664D] rounded-[100px] flex items-center justify-center">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 bg-[#ffe5664D] rounded-full flex items-center justify-center">
                   <svg
                     width="16"
                     height="16"
@@ -787,18 +787,18 @@ export default function CountryPage() {
                   </svg>
                 </div>
                 <div className="flex flex-col">
-                  <div className="text-[#697485] text-sm font-normal font-['Inter'] leading-tight">
+                  <div className="text-[#697485] text-xs sm:text-sm font-normal font-['Inter'] leading-tight">
                     Open Trades
                   </div>
-                  <div className="text-white text-sm font-medium font-['Inter'] leading-tight">
+                  <div className="text-white text-xs sm:text-sm font-medium font-['Inter'] leading-tight">
                     {country.openTrades}
                   </div>
                 </div>
               </div>
 
               {/* Volumes */}
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-[#60b6fb4D] rounded-[100px] flex items-center justify-center">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 bg-[#60b6fb4D] rounded-full flex items-center justify-center">
                   <svg
                     width="16"
                     height="16"
@@ -830,18 +830,18 @@ export default function CountryPage() {
                   </svg>
                 </div>
                 <div className="flex flex-col">
-                  <div className="text-[#697485] text-sm font-normal font-['Inter'] leading-tight">
+                  <div className="text-[#697485] text-xs sm:text-sm font-normal font-['Inter'] leading-tight">
                     Volumes
                   </div>
-                  <div className="text-white text-sm font-medium font-['Inter'] leading-tight">
+                  <div className="text-white text-xs sm:text-sm font-medium font-['Inter'] leading-tight">
                     {country.volumes}
                   </div>
                 </div>
               </div>
 
               {/* Funding/Cooldown */}
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-[#ff45454D] rounded-[100px] flex items-center justify-center">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 bg-[#ff45454D] rounded-full flex items-center justify-center">
                   <svg
                     width="16"
                     height="16"
@@ -873,14 +873,14 @@ export default function CountryPage() {
                   </svg>
                 </div>
                 <div className="flex flex-col">
-                  <div className="text-[#697485] text-sm font-normal font-['Inter'] leading-tight">
+                  <div className="text-[#697485] text-xs sm:text-sm font-normal font-['Inter'] leading-tight">
                     Funding/Cooldown
                   </div>
                   <div>
-                    <span className="text-[#16b264] text-sm font-medium font-['Inter'] leading-tight">
+                    <span className="text-[#16b264] text-xs sm:text-sm font-medium font-['Inter'] leading-tight">
                       {country.fundingPercent}{" "}
                     </span>
-                    <span className="text-white text-sm font-medium font-['Inter'] leading-tight">
+                    <span className="text-white text-xs sm:text-sm font-medium font-['Inter'] leading-tight">
                       {country.fundingCooldown}
                     </span>
                   </div>
@@ -1602,7 +1602,7 @@ export default function CountryPage() {
                           Confirm PnL
                         </h2>
                         <p className="text-gray-400 text-sm">
-                          Review your position's performance
+                          Review your position&apos;s performance
                         </p>
                       </div>
                       <div className="text-center mb-6">
