@@ -2,7 +2,7 @@ import { AnchorProvider, Program, Idl } from "@coral-xyz/anchor";
 import { Connection, PublicKey } from "@solana/web3.js";
 import { idl, PROGRAM_ID } from "./solana";
 
-// Helper untuk membuat program instance
+// helper for creating program instance
 export function createProgram(programId: PublicKey, provider: AnchorProvider) {
   try {
     // Use the actual account types from the IDL
@@ -27,22 +27,22 @@ export function createProgram(programId: PublicKey, provider: AnchorProvider) {
         }) || [],
     };
 
-    // Tambahkan informasi yang diperlukan ke IDL
+    // Add required information to IDL
     for (const account of safeIdl.accounts) {
       if (!account.name) {
         account.name = "UnknownAccount";
       }
     }
 
-    // Gunakan cara alternatif untuk membuat program
-    // @ts-ignore - Kita paksa TypeScript mengabaikan pengecekan tipe
+    // Use alternative way to create program
+    // @ts-ignore - We force TypeScript to ignore type checking
     const program = new Program(safeIdl, programId, provider);
 
     return program;
   } catch (error) {
     console.error("Error creating program instance:", error);
 
-    // Fallback: gunakan pendekatan alternatif yang lebih manual
+    // Fallback: use alternative manual approach
     try {
       // @ts-ignore
       const minimalProgram = {
@@ -70,7 +70,7 @@ export function createProgram(programId: PublicKey, provider: AnchorProvider) {
       return minimalProgram;
     } catch (fallbackError) {
       console.error("Failed to create fallback program:", fallbackError);
-      throw error; // throw error asli
+      throw error; //throw original error
     }
   }
 }
