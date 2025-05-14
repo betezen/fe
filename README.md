@@ -1,24 +1,24 @@
 
 # 🧠 Prepecual Prediction Market
 
-Platform prediction market berbasis Solana dan Anchor, dengan frontend berbasis Next.js.
+Solana and Anchor-based prediction market platform with a Next.js frontend.
 
 ---
 
 ## 🚀 Getting Started
 
-### 📋 Prasyarat
+### 📋 Prerequisites
 
-Pastikan Anda sudah menginstal versi berikut:
+Make sure you have installed the following versions:
 
-- **Node.js** `v18.18.0` atau lebih tinggi  
-- **Rust** `v1.77.2` atau lebih tinggi  
-- **Anchor CLI** `v0.31.1` atau lebih tinggi  
-- **Solana CLI** `v1.18.17` atau lebih tinggi  
+- **Node.js** `v18.18.0` or higher  
+- **Rust** `v1.77.2` or higher  
+- **Anchor CLI** `v0.31.1` or higher  
+- **Solana CLI** `v1.18.17` or higher  
 
 ---
 
-### 📦 Instalasi
+### 📦 Installation
 
 1. **Clone repository:**
 
@@ -27,15 +27,18 @@ git clone https://github.com/betezen/fe.git
 cd fe
 ```
 
-2. **Install package**
+2. **Install packages:**
 ```bash
 npm install
 ```
-3. **Running aplikasi**
+3. **Run the application:**
 ```bash
 npm run dev
 ```
 
+### Version Information
+
+```
 avm --version            
 avm 0.31.1
 
@@ -49,6 +52,7 @@ info: The currently active `rustc` version is `rustc 1.86.0 (05f9846f8 2025-03-3
 
 rustc --version 
 rustc 1.86.0 (05f9846f8 2025-03-31)
+```
 
-how to setup anchor rust
-add Anchor.toml and Cargo.toml
+### Anchor Setup
+To setup Anchor with Rust, add Anchor.toml and Cargo.toml files to your project.

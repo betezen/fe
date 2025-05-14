@@ -11,9 +11,13 @@ import {
   SystemProgram,
   LAMPORTS_PER_SOL,
 } from "@solana/web3.js";
+import "@solana/wallet-adapter-react-ui/styles.css";
 
 import { usePositionsStore } from "@/components/trading/PositionsContext";
 import { useTradeHistoryStore } from "@/components/dashboard/tradeHistoryStore";
+import { useOpenPosition } from "@/hooks/use-openPositions";
+import { useClosePosition } from "@/hooks/use-closePositions";
+import { idl } from "@/lib/solana";
 
 // Sample country data - in a real app, this would come from an API
 const countryData = {
@@ -510,7 +514,7 @@ export default function CountryPage() {
   const refetchPosition = async () => {
     if (publicKey) {
       try {
-        // Implementasi sesuai program Solana Anda
+        // Implementation according to your Solana program
         console.log("Fetching position data for:", publicKey.toString());
         // Custom implementation...
 
@@ -521,10 +525,19 @@ export default function CountryPage() {
     }
   };
 
+  const { openPosition } = useOpenPosition();
+  const { closePosition } = useClosePosition();
+
   const handlePlaceTrade = async () => {
     try {
       if (!publicKey) {
-        throw new Error("Wallet not connected");
+        alert("Please connect your wallet first");
+        return;
+      }
+
+      if (!position.size || parseFloat(position.size) <= 0) {
+        alert("Please enter a valid size amount");
+        return;
       }
 
       setIsPending(true);
@@ -551,19 +564,41 @@ export default function CountryPage() {
         status: "Open",
       });
 
-      // Simulasi delay untuk "processing"
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Debug log untuk memverifikasi nilai
+      console.log("Sending trade with params:", {
+        countryId: id,
+        isLong: position.isLong,
+        leverage: Number(position.leverage),
+        sizeSol: position.size,
+      });
 
-      // Mock transaksi berhasil - tidak perlu transaksi Solana sungguhan
-      console.log("Mock transaction successful!");
+      const result = await openPosition(
+        id as string,
+        position.isLong,
+        Number(position.leverage),
+        position.size
+      );
 
-      // Update UI
-      setShowPosition(true);
+      if (result.success) {
+        console.log("Transaction submitted, signature:", result.signature);
+
+        // Tambahkan link ke Solana Explorer
+        const explorerUrl = `https://explorer.solana.com/tx/${result.signature}?cluster=devnet`;
+        console.log("View on Solana Explorer:", explorerUrl);
+
+        // IMPROVEMENT: Don't wait for confirmation, immediately update the UI
+        setShowPosition(true);
+        fetchBalance();
+
+        // NEW: Show success notification
+        alert("Transaction sent successfully! Position will be active soon.");
+
+        // No need to wait for confirmation - immediately update UI
+      } else {
+        throw new Error(result.error);
+      }
+
       setIsPending(false);
-
-      // Simulasi pengurangan saldo wallet (opsional)
-      const tradeAmount = Number(position.size) * Number(position.leverage);
-      setWalletBalance((prev) => Math.max(0, prev - tradeAmount));
     } catch (error: any) {
       setIsPending(false);
       console.error("Error placing trade:", error);
@@ -597,20 +632,8 @@ export default function CountryPage() {
 
   const handleCloseStepContinue = () => {
     if (closeStep === 1) {
-      // Update the existing trade's status to Closed
-      if (tradeId) {
-        updateTrade(tradeId, {
-          status: "Closed",
-          marketPrice: country.markPrice,
-          time: new Date().toLocaleTimeString(),
-          pnl: {
-            amount: "$0.00",
-            percentage: "0.0",
-            isProfit: true,
-          },
-        });
-      }
-      setCloseStep(2 as StepType);
+      // Panggil handleClosePosition untuk step 1
+      handleClosePosition();
     } else if (closeStep === 2) {
       setCloseStep(3 as StepType);
     } else if (closeStep === 3) {
@@ -618,9 +641,62 @@ export default function CountryPage() {
     } else if (closeStep === 4) {
       setCloseStep(null);
       setShowPosition(false);
-      setTradeId(""); // Clear the trade ID
+      setTradeId("");
     }
   };
+
+  const handleClosePosition = async () => {
+    try {
+      setIsConfirming(true);
+
+      // Panggil hook closePosition
+      const result = await closePosition();
+
+      if (result.success) {
+        console.log("Position close transaction submitted:", result.signature);
+
+        // IMPROVEMENT: No need to wait for confirmation
+
+        // Update trade history
+        if (tradeId) {
+          updateTrade(tradeId, {
+            status: "Closing", // Change status to "Closing" instead of "Closed"
+            marketPrice: country.markPrice,
+            time: new Date().toLocaleTimeString(),
+            pnl: {
+              amount: "$0.00",
+              percentage: "0.0",
+              isProfit: true,
+            },
+          });
+        }
+
+        // Continue UI flow (according to existing code)
+        setCloseStep(2 as StepType);
+
+        // NEW: Add notification
+        alert(
+          "Request to close position has been sent! Position will be closed soon."
+        );
+      } else {
+        alert(`Failed to close position: ${result.error}`);
+      }
+
+      setIsConfirming(false);
+    } catch (error: any) {
+      setIsConfirming(false);
+      console.error("Error closing position:", error);
+      alert("Failed to close position: " + error.message);
+    }
+  };
+
+  useEffect(() => {
+    console.log("IDL loaded:", {
+      hasAccounts: Boolean(idl.accounts),
+      accountCount: idl.accounts?.length || 0,
+      instructions: idl.instructions?.map((i: any) => i.name) || [],
+    });
+  }, []);
 
   if (!country) {
     return <div>Country not found</div>;
@@ -1560,7 +1636,7 @@ export default function CountryPage() {
                       </div>
                       <div className="text-center">
                         <div className="text-white text-3xl font-bold mb-2">
-                          $1,928.47
+                          $1,234.56
                         </div>
                         <div className="text-gray-400">Previous: $1,000.00</div>
                       </div>
@@ -1641,7 +1717,7 @@ export default function CountryPage() {
               </div>
             ) : (
               <div className="text-center text-gray-500 py-4">
-                No open positions
+                No open positions.
               </div>
             )}
           </div>

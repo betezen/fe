@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "netlify-build": "npm rebuild && npm run build"
+    "netlify-build": "mkdir -p target/idl && cp src/idl/escrow.json target/idl/ && npm run build"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
@@ -41,7 +41,6 @@
     "@solana/wallet-adapter-react": "^0.15.35",
     "@solana/wallet-adapter-react-ui": "^0.9.35",
     "@solana/wallet-adapter-wallets": "^0.19.32",
-    "@solana/web3.js": "^1.98.2",
     "@tanstack/react-query": "^5.74.7",
     "chai": "^5.2.0",
     "class-variance-authority": "^0.7.1",
