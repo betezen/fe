@@ -671,7 +671,7 @@ export default function CountryPage() {
           });
         }
 
-        // Continue UI flow (according to existing code)
+        //Continue UI flow (according to existing code)
         setCloseStep(2 as StepType);
 
         // NEW: Add notification

@@ -70,7 +70,7 @@ export function createProgram(programId: PublicKey, provider: AnchorProvider) {
       return minimalProgram;
     } catch (fallbackError) {
       console.error("Failed to create fallback program:", fallbackError);
-      throw error; // throw original error
+      throw error; //throw original error
     }
   }
 }
