@@ -1,7 +1,7 @@
 import { PublicKey, Connection } from "@solana/web3.js";
 import { AnchorProvider, Program, BN, Idl } from "@coral-xyz/anchor";
 import { SOLANA_RPC_ENDPOINT } from "./chain";
-import idlRaw from "@/target/idl/escrow.json";
+import idlRaw from "@/lib/idl/escrow.json";
 
 // Define interface for IDL
 interface BetezenIDL {
