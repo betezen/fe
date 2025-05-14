@@ -10,25 +10,25 @@ import React, { FC, ReactNode, useMemo } from "react";
 export const SOLANA_NETWORK = WalletAdapterNetwork.Devnet;
 export const SOLANA_RPC_ENDPOINT = clusterApiUrl(SOLANA_NETWORK);
 
-// Define el tipo de props para nuestro componente
+// Define the type of props for our component
 interface SolanaWalletProviderProps {
   children: ReactNode;
 }
 
-// Crea un componente funcional con tipado correcto
+// Create a functional component with correct typing
 export const SolanaWalletProvider: FC<SolanaWalletProviderProps> = ({
   children,
 }) => {
-  // Usar devnet para desarrollo
+  // Use devnet for development
   const network = SOLANA_NETWORK;
 
-  // RPC endpoint para Solana
+  // Solana RPC endpoint
   const endpoint = useMemo(() => SOLANA_RPC_ENDPOINT, []);
 
-  // Inicializar sólo el adaptador para Phantom
+  // Initialize only the Phantom adapter
   const wallets = useMemo(() => [new PhantomWalletAdapter()], []);
 
-  // Perbaikan penggunaan React.createElement
+  // Fix the use of React.createElement
   return React.createElement(ConnectionProvider, {
     endpoint,
     children: React.createElement(WalletProvider, {
