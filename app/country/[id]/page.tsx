@@ -542,13 +542,13 @@ export default function CountryPage() {
 
       setIsPending(true);
 
-      // Buat trade ID
+      // Create trade ID
       const newTradeId = `trade-${Date.now()}-${Math.random()
         .toString(36)
         .substring(2, 9)}`;
       setTradeId(newTradeId);
 
-      // Tambahkan ke history
+      // Add to history
       addTrade({
         id: newTradeId,
         country: country.name,
@@ -564,7 +564,7 @@ export default function CountryPage() {
         status: "Open",
       });
 
-      // Debug log untuk memverifikasi nilai
+      // Debug log to verify values
       console.log("Sending trade with params:", {
         countryId: id,
         isLong: position.isLong,
@@ -582,7 +582,7 @@ export default function CountryPage() {
       if (result.success) {
         console.log("Transaction submitted, signature:", result.signature);
 
-        // Tambahkan link ke Solana Explorer
+        // Add link to Solana Explorer
         const explorerUrl = `https://explorer.solana.com/tx/${result.signature}?cluster=devnet`;
         console.log("View on Solana Explorer:", explorerUrl);
 
