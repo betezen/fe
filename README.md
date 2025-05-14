@@ -1,5 +1,8 @@
 
-# 🧠 Prepecual Prediction Market
+
+# Betezen
+
+## Perpetual Prediction Market
 
 Solana and Anchor-based prediction market platform with a Next.js frontend.
 
