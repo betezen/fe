@@ -4,7 +4,7 @@
 
 ---
 
-<img src="assets/betezen.png" alt="Betezen Logo" width="400"/>
+<img src="profile/assets/betezen.png" alt="Betezen Logo" width="400"/>
 
 ## 🧭 Overview
 Betezen.Fun introduces a new type of prediction market: **perpetual, decentralized, and based on economic fundamentals**.
@@ -141,17 +141,17 @@ git push origin feature/your-feature
 <table align="center">
   <tr>
     <td align="center">
-      <img src="assets/Ahmad taufiq.png" width="100" style="border-radius:50%"/><br>
+      <img src="profile/assets/Ahmad taufiq.png" width="100" style="border-radius:50%"/><br>
       <b><a href="https://github.com/AhmadTaufiq24">Ahmad Taufiq Harahap</a></b><br>
       <sub>Project Manager</sub><br>
     </td>
     <td align="center">
-      <img src="assets/Syahlevi.png" width="100" style="border-radius:50%"/><br>
+      <img src="profile/assets/Syahlevi.png" width="100" style="border-radius:50%"/><br>
       <b><a href="https://github.com/syahlevi-aldarna">Syahlevi Aldarna</a></b><br>
       <sub>Frontend Dev</sub><br>
     </td>
     <td align="center">
-      <img src="assets/Danuardi.png" width="100" style="border-radius:50%"/><br>
+      <img src="profile/assets/Danuardi.png" width="100" style="border-radius:50%"/><br>
       <b> <a href="https://github.com/Danuardi">Danuardi Wahyu</a></b><br>
       <sub>Backend Dev</sub><br>
     </td>
