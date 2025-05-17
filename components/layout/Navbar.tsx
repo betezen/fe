@@ -43,13 +43,13 @@ export default function Navbar() {
             className="text-xl font-medium text-white flex items-center"
           >
             <img
-              src="/logo.jpg"
+              src="/logo.png"
               alt="Logo"
               width="32"
               height="32"
               className="mr-2 rounded"
             />
-            betezen.fun
+            Betezen.fun
           </Link>
         </div>
         <div className="flex items-center space-x-6">

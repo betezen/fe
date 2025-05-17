@@ -48,7 +48,7 @@ export default function RootPage() {
                   <div className="w-full aspect-[16.5/14.2] bg-gradient-to-b from-[#0A1428] via-[#1A2036] to-[#1A1510] rounded-xl overflow-hidden shadow-[0_0_100px_rgba(30,64,175,0.3)] border border-blue-900/40">
                     <div className="absolute inset-0 flex items-center justify-center">
                       <Image
-                        src="/BeTheNation3.png"
+                        src="/Betezen.png"
                         alt="Trading dashboard preview"
                         fill
                         className="object-cover"
